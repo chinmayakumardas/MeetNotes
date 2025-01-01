@@ -1,14 +1,141 @@
-import React, { useState } from 'react';
+import React, { useState ,useEffect} from 'react';
 import { TextField, Button, Typography, Link, Box, Container, FormControlLabel, Checkbox, InputAdornment, IconButton } from '@mui/material';
 import { Visibility, VisibilityOff } from '@mui/icons-material';
-
+import CloseIcon from "@mui/icons-material/Close"; 
+import { useRouter } from "next/navigation";
+import { useDispatch } from 'react-redux';
+import { login } from '../redux/slices/authSlice';
 export default function Example() {
-  const [showPassword, setShowPassword] = useState(false);
 
-  const handleClickShowPassword = () => {
-    setShowPassword((prevState) => !prevState);
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState("");  // For showing global error messages
+  const [showPassword, setShowPassword] = useState(false);
+  const [openSnackbar, setOpenSnackbar] = useState(false);
+  const [otp, setOtp] = useState(["", "", "", "", "", ""]);  // OTP as an array of 6 values
+  const [isOtpDialogOpen, setIsOtpDialogOpen] = useState(false);
+  const [otpError, setOtpError] = useState("");
+  const [otpSent, setOtpSent] = useState(false);  // Track if OTP has been sent
+
+  const router = useRouter();
+  const dispatch = useDispatch();
+
+  useEffect(() => {
+    // Check if the user is already logged in
+    const token = localStorage.getItem("token");
+    if (token) {
+      router.push("/dashboard");
+    }
+  }, []);
+
+
+  const validateEmail = (email) => {
+    const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+    return emailRegex.test(email);
   };
 
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+
+    if (!validateEmail(email)) {
+      setError("Please enter a valid email address and password");
+      return;
+    }
+
+    const loginData = { email, password };
+
+    // Mock API response for login
+    const mockResponse = {
+      status: 200, // You can simulate success
+      data: {
+        message: "Login successful",
+      },
+    };
+
+    if (mockResponse.status === 200) {
+      setError("");  // Clear error
+      setOtpSent(true);
+      setIsOtpDialogOpen(true);
+    } else {
+      setError(mockResponse.data.message || "Invalid email or password");
+    }
+  };
+
+  // Mock POST API request to verify OTP
+  const handleOtpSubmit = async () => {
+    const otpValue = otp.join('');
+
+    // Mock OTP verification response
+    const mockOtpResponse = {
+      status: 200, // Simulate OTP verification success
+      data: {
+        token: "mockToken12345",
+        name: "John Doe",
+        role: "Admin",
+        email: email,
+      },
+    };
+
+    if (mockOtpResponse.status === 200) {
+      const { token, name, role, email } = mockOtpResponse.data;
+
+      // Store globally in Redux
+      dispatch(login({ token, username: name, role, email }));
+
+      localStorage.setItem("token", token);
+      localStorage.setItem("username", name);
+      localStorage.setItem("role", role);
+      localStorage.setItem("email", email);
+
+      setOpenSnackbar(true);
+      router.push("/dashboard");
+    } else {
+      setOtpError(mockOtpResponse.data.message || "Invalid OTP. Please try again.");
+    }
+  };
+
+  const handleClickShowPassword = () => {
+    setShowPassword(!showPassword);
+  };
+
+  const handleForgotPassword = () => {
+    router.push("/forgot-password");
+  };
+
+  // Handle OTP input focus and navigation
+  const handleOtpChange = (e, index) => {
+    const value = e.target.value;
+
+    if (/^\d$/.test(value) || value === '') { // Accept only digits or empty value
+      const newOtp = [...otp];
+      newOtp[index] = value;
+      setOtp(newOtp);
+
+      // Move to next field if input is valid
+      if (value && index < otp.length - 1) {
+        document.getElementById(`otp-input-${index + 1}`).focus();
+      }
+    }
+  };
+
+  const handleKeyDown = (e, index) => {
+    if (e.key === 'Backspace') {
+      const newOtp = [...otp];
+      newOtp[index] = '';
+      setOtp(newOtp);
+
+      // Move to previous field if empty
+      if (index > 0) {
+        document.getElementById(`otp-input-${index - 1}`).focus();
+      }
+    }
+  };
+
+  const handleOtpDialogClose = () => {
+    setOtpError("");
+    setOtp(["", "", "", "", "", ""]);  // Reset OTP values when dialog is closed
+    setIsOtpDialogOpen(false);
+  };
   return (
     <Container component="main" maxWidth="xs">
       <Box
@@ -56,6 +183,8 @@ export default function Example() {
             autoComplete="email"
             variant="outlined"
             size="small"
+            value={email}
+              onChange={(e) => setEmail(e.target.value)}
             sx={{
               input: {
                 color: '#0F0F0F', // Text color for input fields
@@ -79,6 +208,8 @@ export default function Example() {
             id="password"
             name="password"
             type={showPassword ? 'text' : 'password'}
+            value={password}
+              onChange={(e) => setPassword(e.target.value)}
             required
             fullWidth
             autoComplete="current-password"
@@ -105,7 +236,7 @@ export default function Example() {
                 <InputAdornment position="end">
                   <IconButton
                     aria-label="toggle password visibility"
-                    onClick={handleClickShowPassword}
+                    onClick={() => setShowPassword(!showPassword)}
                     edge="end"
                     sx={{
                       color: '#4F39F6', // Eye icon color
@@ -134,21 +265,23 @@ export default function Example() {
               }
               label="Remember me"
             />
-            <Link
-              href="#"
-              variant="body2"
-              sx={{
-                fontSize: '0.875rem',
-                color: '#4F39F6', // Indigo color for the link (updated to #4F39F6)
-                textDecoration: 'none', // Removed highlight on hover
-                fontWeight: 'bold', // Made link text bold
-                '&:hover': {
-                  color: '#3A28D3', // Darker shade of indigo on hover
-                },
-              }}
-            >
-              Reset password
-            </Link>
+           <Typography
+  onClick={() => router.push("/forgot-password")}
+  variant="body2"
+  sx={{
+    fontSize: "0.875rem",
+    color: "#4F39F6", // Indigo color for the link (updated to #4F39F6)
+    textDecoration: "none", // Removed highlight on hover
+    fontWeight: "bold", // Made link text bold
+    cursor: "pointer", // Ensures it looks clickable
+    "&:hover": {
+      color: "#3A28D3", // Darker shade of indigo on hover
+    },
+  }}
+>
+  Reset password
+</Typography>
+
           </Box>
 
           <Button
@@ -167,6 +300,7 @@ export default function Example() {
                 backgroundColor: '#3A28D3', // Darker shade of indigo on hover
               },
             }}
+            onClick={handleSubmit}
           >
             Sign in
           </Button>
