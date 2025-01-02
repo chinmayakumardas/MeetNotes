@@ -1,0 +1,40 @@
+{
+    "usertype": [
+      {
+        "id": 1,
+        "username": "admin",
+        "email": "admin@example.com",
+        "password": "123",
+        "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.adminToken12345"
+      },
+      {
+        "id": 2,
+        "username": "hr",
+        "email": "hr@example.com",
+        "password": "123",
+        "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.hrToken12345"
+      },
+      {
+        "id": 3,
+        "username": "cpc",
+        "email": "cpc@example.com",
+        "password": "123",
+        "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.cpcToken12345"
+      },
+      {
+        "id": 4,
+        "username": "md",
+        "email": "md@example.com",
+        "password": "123",
+        "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.mdToken12345"
+      },
+      {
+        "id": 5,
+        "username": "chairman",
+        "email": "chairman@example.com",
+        "password": "123",
+        "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.chairmanToken12345"
+      }
+    ]
+  }
+  

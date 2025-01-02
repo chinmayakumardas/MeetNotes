@@ -5,7 +5,7 @@ import CloseIcon from "@mui/icons-material/Close";
 import { useRouter } from "next/navigation";
 import { useDispatch } from 'react-redux';
 import { login } from '../redux/slices/authSlice';
-export default function Example() {
+export default function LoginForm() {
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
